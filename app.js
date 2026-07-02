@@ -1,6 +1,5 @@
 const { useState, useEffect, useRef } = React;
 
-// ---- helpers ----
 const pad = (n) => String(n).padStart(2, "0");
 const nowMinutes = (d) => d.getHours() * 60 + d.getMinutes();
 const minutesToLabel = (m) => {
@@ -17,29 +16,36 @@ const RESET_KEY = "next-thing:last-reset-date";
 
 const storage = {
   get(key) {
-    try {
-      const v = localStorage.getItem(key);
-      return v === null ? null : v;
-    } catch (e) {
-      return null;
-    }
+    try { const v = localStorage.getItem(key); return v === null ? null : v; } catch (e) { return null; }
   },
   set(key, value) {
-    try {
-      localStorage.setItem(key, value);
-    } catch (e) {}
+    try { localStorage.setItem(key, value); } catch (e) {}
+  },
+  remove(key) {
+    try { localStorage.removeItem(key); } catch (e) {}
   },
 };
 
 const seedTasks = [
-  { id: "t1", title: "Take morning meds", kind: "fixed", time: 8 * 60, done: false, triggerId: null, recurring: true },
-  { id: "t2", title: "Feed the pets", kind: "fixed", time: 8 * 60 + 15, done: false, triggerId: null, recurring: true },
-  { id: "t3", title: "Log pet weights", kind: "triggered", time: null, done: false, triggerId: "t2", recurring: true },
-  { id: "t4", title: "Check job board / Huntr", kind: "fixed", time: 10 * 60, done: false, triggerId: null, recurring: true },
-  { id: "t5", title: "Send one follow-up email", kind: "triggered", time: null, done: false, triggerId: "t4", recurring: true },
-  { id: "t6", title: "Lunch", kind: "fixed", time: 12 * 60 + 30, done: false, triggerId: null, recurring: true },
-  { id: "t7", title: "Wash lunch dishes", kind: "triggered", time: null, done: false, triggerId: "t6", recurring: true },
-  { id: "t8", title: "Evening meds", kind: "fixed", time: 20 * 60, done: false, triggerId: null, recurring: true },
+  { id: "s1",  title: "Isaiah pre-breakfast med", kind: "fixed",     time: 5*60+30,  done: false, triggerId: null, recurring: true },
+  { id: "s2",  title: "Dogs out",                 kind: "triggered", time: null,      done: false, triggerId: "s1", recurring: true },
+  { id: "s3",  title: "Dogs breakfast",           kind: "triggered", time: null,      done: false, triggerId: "s2", recurring: true },
+  { id: "s4",  title: "Isaiah breakfast",         kind: "fixed",     time: 6*60,      done: false, triggerId: null, recurring: true },
+  { id: "s5",  title: "Isaiah ready for school",  kind: "fixed",     time: 7*60+15,   done: false, triggerId: null, recurring: true },
+  { id: "s6",  title: "Morning meds",             kind: "triggered", time: null,      done: false, triggerId: "s5", recurring: true },
+  { id: "s7",  title: "Isaiah morning meds",      kind: "fixed",     time: 7*60+45,   done: false, triggerId: null, recurring: true },
+  { id: "s8",  title: "Isaiah bus",               kind: "fixed",     time: 8*60+15,   done: false, triggerId: null, recurring: true },
+  { id: "s9",  title: "Litter boxes",             kind: "triggered", time: null,      done: false, triggerId: "s8", recurring: true },
+  { id: "s10", title: "Isaiah lunch",             kind: "fixed",     time: 12*60,     done: false, triggerId: null, recurring: true },
+  { id: "s11", title: "Lunch",                    kind: "fixed",     time: 12*60+30,  done: false, triggerId: null, recurring: true },
+  { id: "s12", title: "Isaiah PM meds",           kind: "fixed",     time: 15*60+45,  done: false, triggerId: null, recurring: true },
+  { id: "s13", title: "Start cooking dinner",     kind: "fixed",     time: 16*60+30,  done: false, triggerId: null, recurring: true },
+  { id: "s14", title: "Isaiah dinner",            kind: "fixed",     time: 18*60,     done: false, triggerId: null, recurring: true },
+  { id: "s15", title: "Kids' showers",            kind: "fixed",     time: 19*60,     done: false, triggerId: null, recurring: true },
+  { id: "s16", title: "Isaiah bedtime meds",      kind: "fixed",     time: 19*60+45,  done: false, triggerId: null, recurring: true },
+  { id: "s17", title: "Kellan bedtime meds",      kind: "fixed",     time: 20*60,     done: false, triggerId: null, recurring: true },
+  { id: "s18", title: "Elliot bedtime meds",      kind: "fixed",     time: 20*60,     done: false, triggerId: null, recurring: true },
+  { id: "s19", title: "Isaiah overnight",         kind: "fixed",     time: 1440,      done: false, triggerId: null, recurring: true },
 ];
 
 function parseBulkRows(text, existingTasks) {
@@ -72,7 +78,6 @@ function parseBulkRows(text, existingTasks) {
     if (!title) return;
     const recurring = recurRaw ? /^(y|yes|true|1)/i.test(recurRaw) : true;
     const id = "t" + Date.now() + "-" + idx;
-
     const afterMatch = timeRaw && timeRaw.match(/^after:?\s*(.+)$/i);
     if (afterMatch) {
       const triggerTitle = afterMatch[1].trim().toLowerCase();
@@ -84,7 +89,6 @@ function parseBulkRows(text, existingTasks) {
     }
     allForLookup.push(newTasks[newTasks.length - 1]);
   });
-
   return newTasks;
 }
 
@@ -95,6 +99,7 @@ function NextThing() {
   const [loaded, setLoaded] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const touchStartX = useRef(null);
 
   useEffect(() => {
@@ -125,6 +130,13 @@ function NextThing() {
     if (!loaded) return;
     storage.set(STORAGE_KEY, JSON.stringify(tasks));
   }, [tasks, loaded]);
+
+  const handleResetToDefault = () => {
+    storage.remove(STORAGE_KEY);
+    storage.remove(RESET_KEY);
+    setTasks(seedTasks);
+    setShowResetConfirm(false);
+  };
 
   const nm = nowMinutes(now);
 
@@ -176,43 +188,59 @@ function NextThing() {
   };
 
   return (
-    <div
-      style={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column", background: "#FAF7F2", fontFamily: "'Iowan Old Style', 'Palatino Linotype', Georgia, serif" }}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-    >
-      <Header view={view} setView={setView} now={now} />
+    <div style={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column", background: "#FAF7F2", fontFamily: "'Iowan Old Style', 'Palatino Linotype', Georgia, serif" }}
+      onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <Header view={view} setView={setView} now={now} onReset={() => setShowResetConfirm(true)} />
       <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
-        {view === "focus" ? (
-          <FocusView nextThing={nextThing} allDone={allDone} onComplete={toggleDone} now={nm} />
-        ) : (
-          <TimelineView order={timelineOrder} isUnlocked={isUnlocked} toggleDone={toggleDone} deleteTask={deleteTask} nextId={nextThing && nextThing.id} />
-        )}
+        {view === "focus"
+          ? <FocusView nextThing={nextThing} allDone={allDone} onComplete={toggleDone} now={nm} />
+          : <TimelineView order={timelineOrder} isUnlocked={isUnlocked} toggleDone={toggleDone} deleteTask={deleteTask} nextId={nextThing && nextThing.id} />}
       </div>
       <BottomBar onAdd={() => setShowAdd(true)} onBulkAdd={() => setShowBulkAdd(true)} />
-      {showAdd && (
-        <AddTaskModal tasks={tasks} onClose={() => setShowAdd(false)} onAdd={(t) => { setTasks((p) => [...p, t]); setShowAdd(false); }} />
-      )}
-      {showBulkAdd && (
-        <BulkAddModal tasks={tasks} onClose={() => setShowBulkAdd(false)} onAdd={(nt) => { setTasks((p) => [...p, ...nt]); setShowBulkAdd(false); }} />
-      )}
+
+      {showAdd && <AddTaskModal tasks={tasks} onClose={() => setShowAdd(false)} onAdd={(t) => { setTasks((p) => [...p, t]); setShowAdd(false); }} />}
+      {showBulkAdd && <BulkAddModal tasks={tasks} onClose={() => setShowBulkAdd(false)} onAdd={(nt) => { setTasks((p) => [...p, ...nt]); setShowBulkAdd(false); }} />}
+      {showResetConfirm && <ResetConfirmModal onConfirm={handleResetToDefault} onClose={() => setShowResetConfirm(false)} />}
     </div>
   );
 }
 
-function Header({ view, setView, now }) {
+function Header({ view, setView, now, onReset }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px 20px 16px", borderBottom: "1px solid #E8E1D4" }}>
       <div style={{ fontSize: 11, letterSpacing: "0.12em", color: "#9C8F76", fontFamily: "ui-monospace, monospace" }}>
         {now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
       </div>
-      <div style={{ display: "flex", alignItems: "center", borderRadius: 999, padding: 2, background: "#EFE9DC", border: "1px solid #E0D7C4" }}>
-        <button onClick={() => setView("focus")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, background: view === "focus" ? "#2B2B2B" : "transparent", color: view === "focus" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>
-          ⚡ Now
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", borderRadius: 999, padding: 2, background: "#EFE9DC", border: "1px solid #E0D7C4" }}>
+          <button onClick={() => setView("focus")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, background: view === "focus" ? "#2B2B2B" : "transparent", color: view === "focus" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>
+            ⚡ Now
+          </button>
+          <button onClick={() => setView("timeline")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, background: view === "timeline" ? "#2B2B2B" : "transparent", color: view === "timeline" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>
+            ☰ Day
+          </button>
+        </div>
+        <button onClick={onReset} title="Reset to default schedule"
+          style={{ width: 32, height: 32, borderRadius: 999, background: "#EFE9DC", color: "#9C8F76", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #E0D7C4" }}>
+          ↺
         </button>
-        <button onClick={() => setView("timeline")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, background: view === "timeline" ? "#2B2B2B" : "transparent", color: view === "timeline" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>
-          ☰ Day
-        </button>
+      </div>
+    </div>
+  );
+}
+
+function ResetConfirmModal({ onConfirm, onClose }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, background: "rgba(43,43,43,0.5)", padding: 24 }} onClick={onClose}>
+      <div style={{ width: "100%", maxWidth: 360, borderRadius: 20, padding: 28, background: "#FAF7F2", display: "flex", flexDirection: "column", gap: 16, textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ fontSize: 22, color: "#2B2B2B" }}>Reset schedule?</div>
+        <div style={{ fontSize: 15, color: "#9C8F76", lineHeight: 1.5 }}>
+          This will remove any tasks you've added and restore the default daily schedule. Completed tasks will also reset.
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: "#EFE9DC", color: "#5C5440", fontSize: 15, fontFamily: "system-ui, sans-serif" }}>Cancel</button>
+          <button onClick={onConfirm} style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: "#B85C4A", color: "#FAF7F2", fontSize: 15, fontFamily: "system-ui, sans-serif" }}>Reset</button>
+        </div>
       </div>
     </div>
   );
@@ -271,7 +299,7 @@ function TimelineView({ order, isUnlocked, toggleDone, deleteTask, nextId }) {
             <div key={task.id} style={{ display: "flex", gap: 12, position: "relative" }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <div style={{ width: 28, height: 28, marginTop: 2, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, background: task.done ? "#7A8B69" : isNext ? "#2B2B2B" : "#FAF7F2", border: task.done || isNext ? "none" : `1.5px solid ${unlocked ? "#C9BFA6" : "#DCD5C6"}`, fontSize: 12 }}>
-                  {task.done ? <span style={{ color: "#FAF7F2" }}>✓</span> : !unlocked ? <span style={{ color: "#B8AF99" }}>🔒</span> : task.kind === "fixed" ? <span style={{ color: isNext ? "#FAF7F2" : "#9C8F76" }}>⏰</span> : null}
+                  {task.done ? <span style={{ color: "#FAF7F2" }}>✓</span> : !unlocked ? <span style={{ color: "#B8AF99", fontSize: 11 }}>🔒</span> : task.kind === "fixed" ? <span style={{ color: isNext ? "#FAF7F2" : "#9C8F76", fontSize: 11 }}>⏰</span> : <span style={{ color: isNext ? "#FAF7F2" : "#9C8F76", fontSize: 11 }}>↳</span>}
                 </div>
                 {i < order.length - 1 && <div style={{ width: 1.5, flex: 1, background: "#E8E1D4", minHeight: 22 }} />}
               </div>
@@ -285,7 +313,7 @@ function TimelineView({ order, isUnlocked, toggleDone, deleteTask, nextId }) {
                       {task.kind === "fixed" ? minutesToLabel(task.time) : "after previous step"}
                     </div>
                   </button>
-                  <button onClick={() => deleteTask(task.id)} style={{ padding: 4, opacity: 0.5, background: "none" }}>🗑</button>
+                  <button onClick={() => deleteTask(task.id)} style={{ padding: 4, opacity: 0.4, background: "none", fontSize: 14 }}>🗑</button>
                 </div>
               </div>
             </div>
@@ -324,12 +352,13 @@ function AddTaskModal({ tasks, onClose, onAdd }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 50, background: "rgba(43,43,43,0.4)" }} onClick={onClose}>
-      <div style={{ width: "100%", maxWidth: 420, borderRadius: "16px 16px 0 0", padding: 20, display: "flex", flexDirection: "column", gap: 16, background: "#FAF7F2", fontFamily: "'Iowan Old Style', Georgia, serif" }} onClick={(e) => e.stopPropagation()}>
+      <div style={{ width: "100%", maxWidth: 420, borderRadius: "16px 16px 0 0", padding: 20, display: "flex", flexDirection: "column", gap: 16, background: "#FAF7F2" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ fontSize: 18, color: "#2B2B2B" }}>New task</div>
           <button onClick={onClose} style={{ background: "none", color: "#9C8F76", fontSize: 18 }}>✕</button>
         </div>
-        <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs doing?" style={{ width: "100%", padding: "12px 16px", borderRadius: 12, background: "#EFE9DC", fontSize: 16, color: "#2B2B2B", fontFamily: "system-ui, sans-serif" }} />
+        <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs doing?"
+          style={{ width: "100%", padding: "12px 16px", borderRadius: 12, background: "#EFE9DC", fontSize: 16, color: "#2B2B2B" }} />
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => setKind("fixed")} style={{ flex: 1, padding: "10px 0", borderRadius: 12, background: kind === "fixed" ? "#2B2B2B" : "#EFE9DC", color: kind === "fixed" ? "#FAF7F2" : "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>fixed time</button>
           <button onClick={() => setKind("triggered")} disabled={tasks.length === 0} style={{ flex: 1, padding: "10px 0", borderRadius: 12, background: kind === "triggered" ? "#2B2B2B" : "#EFE9DC", color: kind === "triggered" ? "#FAF7F2" : "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace", opacity: tasks.length === 0 ? 0.5 : 1 }}>after another task</button>
@@ -337,9 +366,7 @@ function AddTaskModal({ tasks, onClose, onAdd }) {
         {kind === "fixed" ? (
           <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
             <select value={hour} onChange={(e) => setHour(Number(e.target.value))} style={{ padding: "8px 12px", borderRadius: 8, background: "#EFE9DC", fontSize: 16 }}>
-              {Array.from({ length: 24 }, (_, h) => (
-                <option key={h} value={h}>{h === 0 ? 12 : h > 12 ? h - 12 : h} {h >= 12 ? "PM" : "AM"}</option>
-              ))}
+              {Array.from({ length: 24 }, (_, h) => (<option key={h} value={h}>{h === 0 ? 12 : h > 12 ? h - 12 : h} {h >= 12 ? "PM" : "AM"}</option>))}
             </select>
             <select value={minute} onChange={(e) => setMinute(Number(e.target.value))} style={{ padding: "8px 12px", borderRadius: 8, background: "#EFE9DC", fontSize: 16 }}>
               {[0, 15, 30, 45].map((m) => (<option key={m} value={m}>:{pad(m)}</option>))}
@@ -350,7 +377,7 @@ function AddTaskModal({ tasks, onClose, onAdd }) {
             {tasks.map((t) => (<option key={t.id} value={t.id}>after: {t.title}</option>))}
           </select>
         )}
-        <button onClick={submit} style={{ width: "100%", padding: "12px 0", borderRadius: 12, marginTop: 4, background: "#7A8B69", color: "#FAF7F2", fontSize: 16, fontFamily: "system-ui, sans-serif" }}>Add to schedule</button>
+        <button onClick={submit} style={{ width: "100%", padding: "12px 0", borderRadius: 12, marginTop: 4, background: "#7A8B69", color: "#FAF7F2", fontSize: 16 }}>Add to schedule</button>
       </div>
     </div>
   );
@@ -362,18 +389,20 @@ function BulkAddModal({ tasks, onClose, onAdd }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 50, background: "rgba(43,43,43,0.4)" }} onClick={onClose}>
-      <div style={{ width: "100%", maxWidth: 420, borderRadius: "16px 16px 0 0", padding: 20, display: "flex", flexDirection: "column", gap: 12, background: "#FAF7F2", fontFamily: "'Iowan Old Style', Georgia, serif", maxHeight: "85vh" }} onClick={(e) => e.stopPropagation()}>
+      <div style={{ width: "100%", maxWidth: 420, borderRadius: "16px 16px 0 0", padding: 20, display: "flex", flexDirection: "column", gap: 12, background: "#FAF7F2", maxHeight: "85vh" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ fontSize: 18, color: "#2B2B2B" }}>Paste a list</div>
           <button onClick={onClose} style={{ background: "none", color: "#9C8F76", fontSize: 18 }}>✕</button>
         </div>
         <div style={{ fontSize: 12.5, color: "#9C8F76", lineHeight: 1.5 }}>
-          One task per line. Copy straight from a spreadsheet column, or type:<br />
+          One task per line. Copy straight from a spreadsheet, or type:<br />
           <span style={{ fontFamily: "ui-monospace, monospace" }}>Take meds, 8:00 AM</span><br />
-          <span style={{ fontFamily: "ui-monospace, monospace" }}>Log weights, after: Feed the pets</span><br />
-          All rows are daily-recurring by default — add a 3rd column "no" to make a one-off.
+          <span style={{ fontFamily: "ui-monospace, monospace" }}>Walk dogs, after: Take meds</span><br />
+          All rows are daily-recurring by default — add "no" as a 3rd column for one-offs.
         </div>
-        <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={"Take meds, 8:00 AM\nFeed the pets, 8:15 AM\nLog weights, after: Feed the pets"} rows={6} style={{ width: "100%", padding: "10px 12px", borderRadius: 12, background: "#EFE9DC", fontSize: 14, color: "#2B2B2B", fontFamily: "ui-monospace, monospace", resize: "vertical" }} />
+        <textarea value={text} onChange={(e) => setText(e.target.value)}
+          placeholder={"Take meds, 8:00 AM\nFeed the pets, 8:15 AM\nLog weights, after: Feed the pets"}
+          rows={6} style={{ width: "100%", padding: "10px 12px", borderRadius: 12, background: "#EFE9DC", fontSize: 14, color: "#2B2B2B", fontFamily: "ui-monospace, monospace", resize: "vertical" }} />
         {preview.length > 0 && (
           <div style={{ overflowY: "auto", maxHeight: 160 }}>
             <div style={{ fontSize: 11, color: "#9C8F76", fontFamily: "ui-monospace, monospace", marginBottom: 4 }}>{preview.length} task{preview.length !== 1 ? "s" : ""} will be added</div>
@@ -386,7 +415,8 @@ function BulkAddModal({ tasks, onClose, onAdd }) {
             ))}
           </div>
         )}
-        <button onClick={() => preview.length && onAdd(preview)} disabled={preview.length === 0} style={{ width: "100%", padding: "12px 0", borderRadius: 12, marginTop: 4, background: preview.length ? "#7A8B69" : "#DCD5C6", color: "#FAF7F2", fontSize: 16, fontFamily: "system-ui, sans-serif" }}>
+        <button onClick={() => preview.length && onAdd(preview)} disabled={preview.length === 0}
+          style={{ width: "100%", padding: "12px 0", borderRadius: 12, marginTop: 4, background: preview.length ? "#7A8B69" : "#DCD5C6", color: "#FAF7F2", fontSize: 16 }}>
           Add {preview.length || ""} task{preview.length === 1 ? "" : "s"}
         </button>
       </div>
