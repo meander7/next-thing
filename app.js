@@ -192,10 +192,10 @@ function NextThing() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column", background: "chartreuse", fontFamily: "'Iowan Old Style', 'Palatino Linotype', Georgia, serif" }}
+    <div style={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column", background: "#FAF7F2", fontFamily: "'Iowan Old Style', 'Palatino Linotype', Georgia, serif" }}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <Header view={view} setView={setView} now={now} onReset={() => setShowResetConfirm(true)} tomorrowCount={tomorrowTasks.length} onTomorrowOpen={() => setShowTomorrow(true)} />
-      <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+      <div style={{ flex: 1, overflow: "hidden", position: "relative", paddingTop: 24 }}>
         {view === "focus"
           ? <FocusView nextThing={nextThing} allDone={allDone} onComplete={toggleDone} now={nm} />
           : <TimelineView order={timelineOrder} isUnlocked={isUnlocked} toggleDone={toggleDone} deleteTask={deleteTask} nextId={nextThing && nextThing.id} />}
