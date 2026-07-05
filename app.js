@@ -10,6 +10,7 @@ const minutesToLabel = (m) => {
   return `${h12}:${pad(min)} ${ampm}`;
 };
 const todayStr = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const isWeekend = (d) => d.getDay() === 0 || d.getDay() === 6;
 
 const STORAGE_KEY = "next-thing:tasks-v1";
 const RESET_KEY = "next-thing:last-reset-date";
@@ -20,65 +21,65 @@ const storage = {
   remove(key) { try { localStorage.removeItem(key); } catch (e) {} },
 };
 
-// scheduledFor: "today" | "tomorrow"
+// critical: true  → shows persistent missed banner if overdue and unchecked
+// weekdayOnly: true → task is hidden on weekends
 const seedTasks = [
-  { id: "s1",  title: "Isaiah pre-breakfast med", kind: "fixed",     time: 5*60+30,  done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s2",  title: "Dogs out",                 kind: "triggered", time: null,      done: false, triggerId: "s1", recurring: true, scheduledFor: "today" },
-  { id: "s3",  title: "Dogs breakfast",           kind: "triggered", time: null,      done: false, triggerId: "s2", recurring: true, scheduledFor: "today" },
-  { id: "s4",  title: "Isaiah breakfast",         kind: "fixed",     time: 6*60,      done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s5",  title: "Isaiah ready for school",  kind: "fixed",     time: 7*60+15,   done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s6",  title: "Morning meds",             kind: "triggered", time: null,      done: false, triggerId: "s5", recurring: true, scheduledFor: "today" },
-  { id: "s7",  title: "Isaiah morning meds",      kind: "fixed",     time: 7*60+45,   done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s8",  title: "Isaiah bus",               kind: "fixed",     time: 8*60+15,   done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s9",  title: "Litter boxes",             kind: "triggered", time: null,      done: false, triggerId: "s8", recurring: true, scheduledFor: "today" },
-  { id: "s10", title: "Isaiah lunch",             kind: "fixed",     time: 12*60,     done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s11", title: "Lunch",                    kind: "fixed",     time: 12*60+30,  done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s12", title: "Isaiah PM meds",           kind: "fixed",     time: 15*60+45,  done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s13", title: "Start cooking dinner",     kind: "fixed",     time: 16*60+30,  done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s14", title: "Isaiah dinner",            kind: "fixed",     time: 18*60,     done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s15", title: "Kids' showers",            kind: "fixed",     time: 19*60,     done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s16", title: "Isaiah bedtime meds",      kind: "fixed",     time: 19*60+45,  done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s17", title: "Kellan bedtime meds",      kind: "fixed",     time: 20*60,     done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s18", title: "Elliot bedtime meds",      kind: "fixed",     time: 20*60,     done: false, triggerId: null, recurring: true, scheduledFor: "today" },
-  { id: "s19", title: "Isaiah overnight",         kind: "fixed",     time: 1440,      done: false, triggerId: null, recurring: true, scheduledFor: "today" },
+  { id: "s1",  title: "Isaiah pre-breakfast med", kind: "fixed",     time: 5*60+30,  done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: true,  weekdayOnly: false },
+  { id: "s2",  title: "Dogs out",                 kind: "triggered", time: null,      done: false, triggerId: "s1", recurring: true, scheduledFor: "today", critical: false, weekdayOnly: false },
+  { id: "s3",  title: "Dogs breakfast",           kind: "triggered", time: null,      done: false, triggerId: "s2", recurring: true, scheduledFor: "today", critical: false, weekdayOnly: false },
+  { id: "s4",  title: "Isaiah breakfast",         kind: "fixed",     time: 6*60,      done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: false, weekdayOnly: false },
+  { id: "s5",  title: "Isaiah ready for school",  kind: "fixed",     time: 7*60+15,   done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: false, weekdayOnly: true  },
+  { id: "s6",  title: "Morning meds",             kind: "triggered", time: null,      done: false, triggerId: "s5", recurring: true, scheduledFor: "today", critical: true,  weekdayOnly: true  },
+  { id: "s7",  title: "Isaiah morning meds",      kind: "fixed",     time: 7*60+45,   done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: true,  weekdayOnly: false },
+  { id: "s7b", title: "Timmy am meds",            kind: "triggered", time: null,      done: false, triggerId: "s7", recurring: true, scheduledFor: "today", critical: true,  weekdayOnly: false },
+  { id: "s8",  title: "Isaiah bus",               kind: "fixed",     time: 8*60+15,   done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: false, weekdayOnly: true  },
+  { id: "s9",  title: "Litter boxes",             kind: "triggered", time: null,      done: false, triggerId: "s8", recurring: true, scheduledFor: "today", critical: false, weekdayOnly: false },
+  { id: "s10", title: "Isaiah lunch",             kind: "fixed",     time: 12*60,     done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: false, weekdayOnly: false },
+  { id: "s11", title: "Lunch",                    kind: "fixed",     time: 12*60+30,  done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: false, weekdayOnly: false },
+  { id: "s12", title: "Isaiah PM meds",           kind: "fixed",     time: 15*60+45,  done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: true,  weekdayOnly: false },
+  { id: "s13", title: "Start cooking dinner",     kind: "fixed",     time: 16*60+30,  done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: false, weekdayOnly: false },
+  { id: "s14", title: "Isaiah dinner",            kind: "fixed",     time: 18*60,     done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: false, weekdayOnly: false },
+  { id: "s15", title: "Kids' showers",            kind: "fixed",     time: 19*60,     done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: false, weekdayOnly: false },
+  { id: "s16", title: "Isaiah bedtime meds",      kind: "fixed",     time: 19*60+45,  done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: true,  weekdayOnly: false },
+  { id: "s16b",title: "Timmy bedtime meds",       kind: "triggered", time: null,      done: false, triggerId:"s16", recurring: true, scheduledFor: "today", critical: true,  weekdayOnly: false },
+  { id: "s17", title: "Kellan bedtime meds",      kind: "fixed",     time: 20*60,     done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: true,  weekdayOnly: false },
+  { id: "s18", title: "Elliot bedtime meds",      kind: "fixed",     time: 20*60,     done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: true,  weekdayOnly: false },
+  { id: "s19", title: "Isaiah overnight",         kind: "fixed",     time: 1440,      done: false, triggerId: null, recurring: true, scheduledFor: "today", critical: false, weekdayOnly: false },
 ];
+
+// Weekend: litter boxes trigger changes to Isaiah bus on weekdays, but on weekends it's orphaned.
+// We handle this by making litter boxes a fixed-time task on weekends via the filtering logic.
 
 function parseBulkRows(text, existingTasks, scheduledFor = "today") {
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
   const newTasks = [];
   const allForLookup = [...existingTasks];
-
   const parseTimeToMinutes = (raw) => {
     const s = raw.trim();
     const ampm = s.match(/^(\d{1,2}):?(\d{2})?\s*(am|pm)$/i);
     if (ampm) {
-      let h = parseInt(ampm[1], 10);
-      const m = ampm[2] ? parseInt(ampm[2], 10) : 0;
-      if (h === 12) h = 0;
-      if (/pm/i.test(ampm[3])) h += 12;
-      return h * 60 + m;
+      let h = parseInt(ampm[1], 10); const m = ampm[2] ? parseInt(ampm[2], 10) : 0;
+      if (h === 12) h = 0; if (/pm/i.test(ampm[3])) h += 12; return h * 60 + m;
     }
-    const military = s.match(/^(\d{1,2}):(\d{2})$/);
-    if (military) return parseInt(military[1], 10) * 60 + parseInt(military[2], 10);
+    const mil = s.match(/^(\d{1,2}):(\d{2})$/);
+    if (mil) return parseInt(mil[1], 10) * 60 + parseInt(mil[2], 10);
     return null;
   };
-
   lines.forEach((line, idx) => {
     const cols = line.split(/\t|,(?![^(]*\))/).map((c) => c.trim());
     if (cols.length < 2) return;
     const [titleRaw, timeRaw, recurRaw] = cols;
     if (/^title$/i.test(titleRaw)) return;
-    const title = titleRaw.replace(/^"|"$/g, "");
-    if (!title) return;
+    const title = titleRaw.replace(/^"|"$/g, ""); if (!title) return;
     const recurring = recurRaw ? /^(y|yes|true|1)/i.test(recurRaw) : true;
     const id = "t" + Date.now() + "-" + idx;
     const afterMatch = timeRaw && timeRaw.match(/^after:?\s*(.+)$/i);
     if (afterMatch) {
       const trigger = allForLookup.find((t) => t.title.toLowerCase() === afterMatch[1].trim().toLowerCase());
-      newTasks.push({ id, title, kind: "triggered", time: null, done: false, triggerId: trigger ? trigger.id : null, recurring, scheduledFor });
+      newTasks.push({ id, title, kind: "triggered", time: null, done: false, triggerId: trigger ? trigger.id : null, recurring, scheduledFor, critical: false, weekdayOnly: false });
     } else {
       const minutes = parseTimeToMinutes(timeRaw || "");
-      newTasks.push({ id, title, kind: "fixed", time: minutes ?? 9 * 60, done: false, triggerId: null, recurring, scheduledFor });
+      newTasks.push({ id, title, kind: "fixed", time: minutes ?? 9 * 60, done: false, triggerId: null, recurring, scheduledFor, critical: false, weekdayOnly: false });
     }
     allForLookup.push(newTasks[newTasks.length - 1]);
   });
@@ -105,15 +106,10 @@ function NextThing() {
     let loadedTasks = seedTasks;
     const raw = storage.get(STORAGE_KEY);
     if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length) loadedTasks = parsed;
-      } catch (e) {}
+      try { const p = JSON.parse(raw); if (Array.isArray(p) && p.length) loadedTasks = p; } catch (e) {}
     }
-
-    // Migrate old tasks that don't have scheduledFor
-    loadedTasks = loadedTasks.map((t) => ({ scheduledFor: "today", ...t }));
-
+    // migrate missing fields
+    loadedTasks = loadedTasks.map((t) => ({ scheduledFor: "today", critical: false, weekdayOnly: false, ...t }));
     const lastReset = storage.get(RESET_KEY);
     const today = todayStr(new Date());
     if (lastReset !== today) {
@@ -124,7 +120,6 @@ function NextThing() {
       });
       storage.set(RESET_KEY, today);
     }
-
     setTasks(loadedTasks);
     setLoaded(true);
   }, []);
@@ -135,20 +130,34 @@ function NextThing() {
   }, [tasks, loaded]);
 
   const handleResetToDefault = () => {
-    storage.remove(STORAGE_KEY);
-    storage.remove(RESET_KEY);
-    setTasks(seedTasks);
-    setShowResetConfirm(false);
+    storage.remove(STORAGE_KEY); storage.remove(RESET_KEY);
+    setTasks(seedTasks); setShowResetConfirm(false);
   };
 
   const nm = nowMinutes(now);
-  const todayTasks = tasks.filter((t) => t.scheduledFor === "today");
+  const weekend = isWeekend(now);
+
+  // Filter tasks: today only, skip weekday-only on weekends
+  // Special case: litter boxes (s9) is triggered by Isaiah bus on weekdays.
+  // On weekends, show it as a standalone task at a fixed time (9am).
+  const todayTasks = tasks
+    .filter((t) => t.scheduledFor === "today")
+    .filter((t) => !(t.weekdayOnly && weekend))
+    .map((t) => {
+      // On weekends, litter boxes loses its trigger — make it a fixed-time task
+      if (weekend && t.id === "s9") return { ...t, kind: "fixed", time: 9 * 60, triggerId: null };
+      // Morning meds on weekends: trigger was "Isaiah ready for school" which is hidden.
+      // Make it fixed at 8am instead.
+      if (weekend && t.id === "s6") return { ...t, kind: "fixed", time: 8 * 60, triggerId: null };
+      return t;
+    });
+
   const tomorrowTasks = tasks.filter((t) => t.scheduledFor === "tomorrow");
 
-  const isUnlocked = (task) => {
+  const isUnlocked = (task, taskList) => {
     if (task.kind === "fixed") return true;
     if (!task.triggerId) return true;
-    const trigger = todayTasks.find((t) => t.id === task.triggerId);
+    const trigger = taskList.find((t) => t.id === task.triggerId);
     return trigger ? trigger.done : false;
   };
 
@@ -171,7 +180,7 @@ function NextThing() {
 
   const getNextThing = () => {
     const undone = timelineOrder.filter((t) => !t.done);
-    const unlockedUndone = undone.filter(isUnlocked);
+    const unlockedUndone = undone.filter((t) => isUnlocked(t, todayTasks));
     if (unlockedUndone.length === 0) return undone[0] || null;
     const dueFixed = unlockedUndone.filter((t) => t.kind === "fixed" && t.time <= nm).sort((a, b) => b.time - a.time)[0];
     if (dueFixed) return dueFixed;
@@ -180,7 +189,24 @@ function NextThing() {
     return unlockedUndone.sort((a, b) => (a.time ?? 9999) - (b.time ?? 9999))[0];
   };
 
+  // Missed critical tasks: critical, not done, and overdue
+  // Fixed: time has passed. Triggered: trigger is done but task isn't.
+  const missedCritical = todayTasks.filter((t) => {
+    if (!t.critical || t.done) return false;
+    if (t.kind === "fixed") return t.time <= nm;
+    if (t.kind === "triggered") {
+      const trigger = todayTasks.find((tr) => tr.id === t.triggerId);
+      return trigger ? trigger.done : false;
+    }
+    return false;
+  });
+
   const nextThing = getNextThing();
+  // Don't show a missed critical as the "next thing" card — it'll be in the banner
+  const nextThingFiltered = nextThing && missedCritical.find((m) => m.id === nextThing.id)
+    ? timelineOrder.filter((t) => !t.done && isUnlocked(t, todayTasks) && !missedCritical.find((m) => m.id === t.id))[0] || nextThing
+    : nextThing;
+
   const allDone = todayTasks.length > 0 && todayTasks.every((t) => t.done);
 
   const onTouchStart = (e) => (touchStartX.current = e.touches[0].clientX);
@@ -197,11 +223,10 @@ function NextThing() {
       <Header view={view} setView={setView} now={now} onReset={() => setShowResetConfirm(true)} tomorrowCount={tomorrowTasks.length} onTomorrowOpen={() => setShowTomorrow(true)} />
       <div style={{ flex: 1, overflow: "hidden", position: "relative", paddingTop: 24 }}>
         {view === "focus"
-          ? <FocusView nextThing={nextThing} allDone={allDone} onComplete={toggleDone} now={nm} />
-          : <TimelineView order={timelineOrder} isUnlocked={isUnlocked} toggleDone={toggleDone} deleteTask={deleteTask} nextId={nextThing && nextThing.id} />}
+          ? <FocusView nextThing={nextThingFiltered} allDone={allDone} onComplete={toggleDone} now={nm} missedCritical={missedCritical} />
+          : <TimelineView order={timelineOrder} isUnlocked={(t) => isUnlocked(t, todayTasks)} toggleDone={toggleDone} deleteTask={deleteTask} nextId={nextThingFiltered && nextThingFiltered.id} />}
       </div>
       <BottomBar onAdd={() => setShowAdd(true)} onBulkAdd={() => setShowBulkAdd(true)} />
-
       {showAdd && <AddTaskModal tasks={todayTasks} onClose={() => setShowAdd(false)} onAdd={(t) => { setTasks((p) => [...p, t]); setShowAdd(false); }} />}
       {showBulkAdd && <BulkAddModal tasks={tasks} onClose={() => setShowBulkAdd(false)} onAdd={(nt) => { setTasks((p) => [...p, ...nt]); setShowBulkAdd(false); }} />}
       {showResetConfirm && <ResetConfirmModal onConfirm={handleResetToDefault} onClose={() => setShowResetConfirm(false)} />}
@@ -218,17 +243,15 @@ function Header({ view, setView, now, onReset, tomorrowCount, onTomorrowOpen }) 
           {now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
         </div>
         {tomorrowCount > 0 && (
-          <button onClick={onTomorrowOpen} style={{ background: "none", padding: 0, marginTop: 3, display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{ fontSize: 11, color: "#7A8B69", fontFamily: "ui-monospace, monospace", letterSpacing: "0.08em" }}>
-              {tomorrowCount} queued for tomorrow →
-            </span>
+          <button onClick={onTomorrowOpen} style={{ background: "none", padding: 0, marginTop: 3 }}>
+            <span style={{ fontSize: 11, color: "#7A8B69", fontFamily: "ui-monospace, monospace", letterSpacing: "0.08em" }}>{tomorrowCount} queued for tomorrow →</span>
           </button>
         )}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "center", borderRadius: 999, padding: 2, background: "#EFE9DC", border: "1px solid #E0D7C4" }}>
-          <button onClick={() => setView("focus")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 999, background: view === "focus" ? "#2B2B2B" : "transparent", color: view === "focus" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>⚡ Now</button>
-          <button onClick={() => setView("timeline")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 999, background: view === "timeline" ? "#2B2B2B" : "transparent", color: view === "timeline" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>☰ Day</button>
+          <button onClick={() => setView("focus")} style={{ padding: "4px 12px", borderRadius: 999, background: view === "focus" ? "#2B2B2B" : "transparent", color: view === "focus" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>⚡ Now</button>
+          <button onClick={() => setView("timeline")} style={{ padding: "4px 12px", borderRadius: 999, background: view === "timeline" ? "#2B2B2B" : "transparent", color: view === "timeline" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>☰ Day</button>
         </div>
         <button onClick={onReset} title="Reset to default schedule" style={{ width: 32, height: 32, borderRadius: 999, background: "#EFE9DC", color: "#9C8F76", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #E0D7C4" }}>↺</button>
       </div>
@@ -236,71 +259,27 @@ function Header({ view, setView, now, onReset, tomorrowCount, onTomorrowOpen }) 
   );
 }
 
-function TomorrowDrawer({ tasks, onClose, onDelete, onAdd }) {
-  const tomorrowLabel = (() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
-  })();
-
+function MissedBanner({ missed, onComplete }) {
   return (
-    <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 50, background: "rgba(43,43,43,0.4)" }} onClick={onClose}>
-      <div style={{ width: "100%", maxWidth: 420, borderRadius: "16px 16px 0 0", padding: 20, display: "flex", flexDirection: "column", gap: 16, background: "#FAF7F2", maxHeight: "75vh" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: 18, color: "#2B2B2B" }}>Tomorrow's queue</div>
-            <div style={{ fontSize: 12, color: "#9C8F76", fontFamily: "ui-monospace, monospace", marginTop: 2 }}>{tomorrowLabel}</div>
-          </div>
-          <button onClick={onClose} style={{ background: "none", color: "#9C8F76", fontSize: 18 }}>✕</button>
+    <div style={{ margin: "0 16px 16px", borderRadius: 12, background: "#FDF0ED", border: "1.5px solid #E8B4A8", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ fontSize: 11, letterSpacing: "0.1em", color: "#B85C4A", fontFamily: "ui-monospace, monospace" }}>⚠ MISSED CRITICAL</div>
+      {missed.map((t) => (
+        <div key={t.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <div style={{ fontSize: 15, color: "#2B2B2B" }}>{t.title}</div>
+          <button onClick={() => onComplete(t.id)}
+            style={{ padding: "4px 12px", borderRadius: 999, background: "#B85C4A", color: "#FAF7F2", fontSize: 13, whiteSpace: "nowrap" }}>
+            ✓ Done
+          </button>
         </div>
-
-        {tasks.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "24px 0", color: "#9C8F76", fontSize: 15 }}>
-            Nothing queued yet.<br />
-            <span style={{ fontSize: 13 }}>Add a task and toggle it to "tomorrow."</span>
-          </div>
-        ) : (
-          <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
-            {tasks.map((t) => (
-              <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid #F0EAE0" }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 16, color: "#2B2B2B" }}>{t.title}</div>
-                  <div style={{ fontSize: 12, color: "#ADA28A", fontFamily: "ui-monospace, monospace", marginTop: 2 }}>
-                    {t.kind === "fixed" ? minutesToLabel(t.time) : "triggered"}
-                    {t.recurring ? " · daily" : " · one-off"}
-                  </div>
-                </div>
-                <button onClick={() => onDelete(t.id)} style={{ background: "none", opacity: 0.4, fontSize: 14, padding: 4 }}>🗑</button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <button onClick={onAdd} style={{ width: "100%", padding: "12px 0", borderRadius: 12, background: "#2B2B2B", color: "#FAF7F2", fontSize: 15 }}>
-          + Add to tomorrow
-        </button>
-      </div>
+      ))}
     </div>
   );
 }
 
-function ResetConfirmModal({ onConfirm, onClose }) {
-  return (
-    <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, background: "rgba(43,43,43,0.5)", padding: 24 }} onClick={onClose}>
-      <div style={{ width: "100%", maxWidth: 360, borderRadius: 20, padding: 24, background: "#FAF7F2", display: "flex", flexDirection: "column", gap: 16, textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ fontSize: 22, color: "#2B2B2B" }}>Reset schedule?</div>
-        <div style={{ fontSize: 15, color: "#9C8F76", lineHeight: 1.5 }}>This will remove any tasks you've added and restore the default daily schedule. Completed tasks will also reset.</div>
-        <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: "#EFE9DC", color: "#5C5440", fontSize: 15 }}>Cancel</button>
-          <button onClick={onConfirm} style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: "#B85C4A", color: "#FAF7F2", fontSize: 15 }}>Reset</button>
-        </div>
-      </div>
-    </div>
-  );
-}
+function FocusView({ nextThing, allDone, onComplete, now, missedCritical }) {
+  const hasMissed = missedCritical && missedCritical.length > 0;
 
-function FocusView({ nextThing, allDone, onComplete, now }) {
-  if (allDone) {
+  if (allDone && !hasMissed) {
     return (
       <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 32px", textAlign: "center", gap: 12 }}>
         <div style={{ fontSize: 15, fontFamily: "ui-monospace, monospace", color: "#9C8F76", letterSpacing: "0.08em" }}>ALL CLEAR</div>
@@ -309,25 +288,29 @@ function FocusView({ nextThing, allDone, onComplete, now }) {
       </div>
     );
   }
-  if (!nextThing) {
-    return (
-      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 32px", textAlign: "center" }}>
-        <div style={{ fontSize: 18, color: "#9C8F76" }}>Everything left is locked. Check the Day view to see what unlocks it.</div>
-      </div>
-    );
-  }
-  const isFixed = nextThing.kind === "fixed";
-  const isFuture = isFixed && nextThing.time > now;
+
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", gap: 32 }}>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, maxWidth: 380, width: "100%" }}>
-        <div style={{ fontSize: 12, letterSpacing: "0.14em", color: isFuture ? "#9C8F76" : "#7A8B69", fontFamily: "ui-monospace, monospace" }}>
-          {isFuture ? `SCHEDULED · ${minutesToLabel(nextThing.time)}` : isFixed ? "DUE NOW" : "UNLOCKED"}
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {hasMissed && <MissedBanner missed={missedCritical} onComplete={onComplete} />}
+
+      {nextThing ? (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", gap: 32 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, maxWidth: 380, width: "100%" }}>
+            <div style={{ fontSize: 12, letterSpacing: "0.14em", color: nextThing.time > now && nextThing.kind === "fixed" ? "#9C8F76" : "#7A8B69", fontFamily: "ui-monospace, monospace" }}>
+              {nextThing.kind === "fixed" && nextThing.time > now ? `SCHEDULED · ${minutesToLabel(nextThing.time)}` : nextThing.kind === "fixed" ? "DUE NOW" : "UNLOCKED"}
+            </div>
+            <div style={{ textAlign: "center", fontSize: 36, lineHeight: 1.25, color: "#2B2B2B", fontWeight: 500 }}>{nextThing.title}</div>
+            {nextThing.kind === "triggered" && <div style={{ fontSize: 14, color: "#9C8F76" }}>unlocked by completing the task before it</div>}
+          </div>
+          <button onClick={() => onComplete(nextThing.id)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "16px 28px", borderRadius: 999, background: "#2B2B2B", color: "#FAF7F2", fontSize: 16 }}>✓ Done</button>
         </div>
-        <div style={{ textAlign: "center", fontSize: 36, lineHeight: 1.25, color: "#2B2B2B", fontWeight: 500 }}>{nextThing.title}</div>
-        {nextThing.kind === "triggered" && <div style={{ fontSize: 14, color: "#9C8F76" }}>unlocked by completing the task before it</div>}
-      </div>
-      <button onClick={() => onComplete(nextThing.id)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "16px 28px", borderRadius: 999, background: "#2B2B2B", color: "#FAF7F2", fontSize: 16 }}>✓ Done</button>
+      ) : (
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 32px", textAlign: "center" }}>
+          <div style={{ fontSize: 18, color: "#9C8F76" }}>
+            {hasMissed ? "Take care of the missed items above, then you're good." : "Everything left is locked. Check the Day view to see what unlocks it."}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -349,15 +332,23 @@ function TimelineView({ order, isUnlocked, toggleDone, deleteTask, nextId }) {
           return (
             <div key={task.id} style={{ display: "flex", gap: 12 }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div style={{ width: 28, height: 28, marginTop: 2, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, background: task.done ? "#7A8B69" : isNext ? "#2B2B2B" : "#FAF7F2", border: task.done || isNext ? "none" : `1.5px solid ${unlocked ? "#C9BFA6" : "#DCD5C6"}`, fontSize: 12 }}>
-                  {task.done ? <span style={{ color: "#FAF7F2" }}>✓</span> : !unlocked ? <span style={{ color: "#B8AF99", fontSize: 11 }}>🔒</span> : task.kind === "fixed" ? <span style={{ color: isNext ? "#FAF7F2" : "#9C8F76", fontSize: 11 }}>⏰</span> : <span style={{ color: isNext ? "#FAF7F2" : "#9C8F76", fontSize: 11 }}>↳</span>}
+                <div style={{ width: 28, height: 28, marginTop: 2, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  background: task.done ? "#7A8B69" : isNext ? "#2B2B2B" : task.critical ? "#FDF0ED" : "#FAF7F2",
+                  border: task.done || isNext ? "none" : `1.5px solid ${task.critical && !task.done ? "#E8B4A8" : unlocked ? "#C9BFA6" : "#DCD5C6"}`, fontSize: 12 }}>
+                  {task.done ? <span style={{ color: "#FAF7F2" }}>✓</span>
+                    : !unlocked ? <span style={{ color: "#B8AF99", fontSize: 11 }}>🔒</span>
+                    : task.critical ? <span style={{ fontSize: 11 }}>!</span>
+                    : task.kind === "fixed" ? <span style={{ color: isNext ? "#FAF7F2" : "#9C8F76", fontSize: 11 }}>⏰</span>
+                    : <span style={{ color: isNext ? "#FAF7F2" : "#9C8F76", fontSize: 11 }}>↳</span>}
                 </div>
                 {i < order.length - 1 && <div style={{ width: 1.5, flex: 1, background: "#E8E1D4", minHeight: 22 }} />}
               </div>
               <div style={{ flex: 1, paddingBottom: 24, paddingTop: 2 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
                   <button onClick={() => unlocked && toggleDone(task.id)} disabled={!unlocked} style={{ textAlign: "left", flex: 1, background: "none", cursor: unlocked ? "pointer" : "default" }}>
-                    <div style={{ fontSize: 17, color: task.done ? "#B8AF99" : unlocked ? "#2B2B2B" : "#A39C88", textDecoration: task.done ? "line-through" : "none", fontWeight: isNext ? 600 : 400 }}>{task.title}</div>
+                    <div style={{ fontSize: 17, color: task.done ? "#B8AF99" : unlocked ? "#2B2B2B" : "#A39C88", textDecoration: task.done ? "line-through" : "none", fontWeight: isNext ? 600 : 400 }}>
+                      {task.title}{task.critical && !task.done ? <span style={{ color: "#B85C4A", marginLeft: 6, fontSize: 12 }}>●</span> : null}
+                    </div>
                     <div style={{ fontSize: 12, color: "#ADA28A", fontFamily: "ui-monospace, monospace", marginTop: 2 }}>{task.kind === "fixed" ? minutesToLabel(task.time) : "after previous step"}</div>
                   </button>
                   <button onClick={() => deleteTask(task.id)} style={{ padding: 4, opacity: 0.4, background: "none", fontSize: 14 }}>🗑</button>
@@ -373,9 +364,57 @@ function TimelineView({ order, isUnlocked, toggleDone, deleteTask, nextId }) {
 
 function BottomBar({ onAdd, onBulkAdd }) {
   return (
-    <div style={{ padding: "12px 20px", display: "flex", justifyContent: "center", gap: 8, borderTop: "1px solid #E8E1D4" }}>
+    <div style={{ position: "sticky", bottom: 0, padding: "12px 20px", display: "flex", justifyContent: "center", gap: 8, borderTop: "1px solid #E8E1D4", background: "#FAF7F2", zIndex: 10 }}>
       <button onClick={onAdd} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 999, background: "#EFE9DC", color: "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>+ add task</button>
       <button onClick={onBulkAdd} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 999, background: "#EFE9DC", color: "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>📋 paste list</button>
+    </div>
+  );
+}
+
+function TomorrowDrawer({ tasks, onClose, onDelete, onAdd }) {
+  const tomorrowLabel = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); })();
+  return (
+    <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 50, background: "rgba(43,43,43,0.4)" }} onClick={onClose}>
+      <div style={{ width: "100%", maxWidth: 420, borderRadius: "16px 16px 0 0", padding: 20, display: "flex", flexDirection: "column", gap: 16, background: "#FAF7F2", maxHeight: "75vh" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ fontSize: 18, color: "#2B2B2B" }}>Tomorrow's queue</div>
+            <div style={{ fontSize: 12, color: "#9C8F76", fontFamily: "ui-monospace, monospace", marginTop: 2 }}>{tomorrowLabel}</div>
+          </div>
+          <button onClick={onClose} style={{ background: "none", color: "#9C8F76", fontSize: 18 }}>✕</button>
+        </div>
+        {tasks.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "24px 0", color: "#9C8F76", fontSize: 15 }}>Nothing queued yet.<br /><span style={{ fontSize: 13 }}>Add a task and toggle it to "tomorrow."</span></div>
+        ) : (
+          <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+            {tasks.map((t) => (
+              <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid #F0EAE0" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, color: "#2B2B2B" }}>{t.title}</div>
+                  <div style={{ fontSize: 12, color: "#ADA28A", fontFamily: "ui-monospace, monospace", marginTop: 2 }}>{t.kind === "fixed" ? minutesToLabel(t.time) : "triggered"}{t.recurring ? " · daily" : " · one-off"}</div>
+                </div>
+                <button onClick={() => onDelete(t.id)} style={{ background: "none", opacity: 0.4, fontSize: 14, padding: 4 }}>🗑</button>
+              </div>
+            ))}
+          </div>
+        )}
+        <button onClick={onAdd} style={{ width: "100%", padding: "12px 0", borderRadius: 12, background: "#2B2B2B", color: "#FAF7F2", fontSize: 15 }}>+ Add to tomorrow</button>
+      </div>
+    </div>
+  );
+}
+
+function ResetConfirmModal({ onConfirm, onClose }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, background: "rgba(43,43,43,0.5)", padding: 24 }} onClick={onClose}>
+      <div style={{ width: "100%", maxWidth: 360, borderRadius: 20, padding: 24, background: "#FAF7F2", display: "flex", flexDirection: "column", gap: 16, textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ fontSize: 22, color: "#2B2B2B" }}>Reset schedule?</div>
+        <div style={{ fontSize: 15, color: "#9C8F76", lineHeight: 1.5 }}>This will remove any tasks you've added and restore the default daily schedule. Completed tasks will also reset.</div>
+        <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: "#EFE9DC", color: "#5C5440", fontSize: 15 }}>Cancel</button>
+          <button onClick={onConfirm} style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: "#B85C4A", color: "#FAF7F2", fontSize: 15 }}>Reset</button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -391,12 +430,9 @@ function AddTaskModal({ tasks, onClose, onAdd }) {
   const submit = () => {
     if (!title.trim()) return;
     const id = "t" + Date.now();
-    const base = { id, title: title.trim(), done: false, recurring: false, scheduledFor };
-    if (kind === "fixed") {
-      onAdd({ ...base, kind, time: hour * 60 + minute, triggerId: null });
-    } else {
-      onAdd({ ...base, kind, time: null, triggerId: triggerId || null });
-    }
+    const base = { id, title: title.trim(), done: false, recurring: false, scheduledFor, critical: false, weekdayOnly: false };
+    if (kind === "fixed") { onAdd({ ...base, kind, time: hour * 60 + minute, triggerId: null }); }
+    else { onAdd({ ...base, kind, time: null, triggerId: triggerId || null }); }
   };
 
   return (
@@ -406,21 +442,16 @@ function AddTaskModal({ tasks, onClose, onAdd }) {
           <div style={{ fontSize: 18, color: "#2B2B2B" }}>New task</div>
           <button onClick={onClose} style={{ background: "none", color: "#9C8F76", fontSize: 18 }}>✕</button>
         </div>
-
         <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs doing?"
           style={{ width: "100%", padding: "12px 16px", borderRadius: 12, background: "#EFE9DC", fontSize: 16, color: "#2B2B2B" }} />
-
-        {/* Today / Tomorrow toggle */}
         <div style={{ display: "flex", alignItems: "center", borderRadius: 999, padding: 2, background: "#EFE9DC", border: "1px solid #E0D7C4", alignSelf: "center" }}>
           <button onClick={() => setScheduledFor("today")} style={{ padding: "4px 16px", borderRadius: 999, background: scheduledFor === "today" ? "#2B2B2B" : "transparent", color: scheduledFor === "today" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>today</button>
           <button onClick={() => setScheduledFor("tomorrow")} style={{ padding: "4px 16px", borderRadius: 999, background: scheduledFor === "tomorrow" ? "#7A8B69" : "transparent", color: scheduledFor === "tomorrow" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>tomorrow</button>
         </div>
-
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => setKind("fixed")} style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: kind === "fixed" ? "#2B2B2B" : "#EFE9DC", color: kind === "fixed" ? "#FAF7F2" : "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>fixed time</button>
           <button onClick={() => setKind("triggered")} disabled={tasks.length === 0} style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: kind === "triggered" ? "#2B2B2B" : "#EFE9DC", color: kind === "triggered" ? "#FAF7F2" : "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace", opacity: tasks.length === 0 ? 0.5 : 1 }}>after another task</button>
         </div>
-
         {kind === "fixed" ? (
           <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
             <select value={hour} onChange={(e) => setHour(Number(e.target.value))} style={{ padding: "8px 12px", borderRadius: 8, background: "#EFE9DC", fontSize: 16 }}>
@@ -435,7 +466,6 @@ function AddTaskModal({ tasks, onClose, onAdd }) {
             {tasks.map((t) => (<option key={t.id} value={t.id}>after: {t.title}</option>))}
           </select>
         )}
-
         <button onClick={submit} style={{ width: "100%", padding: "12px 0", borderRadius: 12, marginTop: 2, background: scheduledFor === "tomorrow" ? "#7A8B69" : "#2B2B2B", color: "#FAF7F2", fontSize: 16 }}>
           Add for {scheduledFor}
         </button>
@@ -448,7 +478,6 @@ function BulkAddModal({ tasks, onClose, onAdd }) {
   const [text, setText] = useState("");
   const [scheduledFor, setScheduledFor] = useState("today");
   const preview = text.trim() ? parseBulkRows(text, tasks, scheduledFor) : [];
-
   return (
     <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 50, background: "rgba(43,43,43,0.4)" }} onClick={onClose}>
       <div style={{ width: "100%", maxWidth: 420, borderRadius: "16px 16px 0 0", padding: 20, display: "flex", flexDirection: "column", gap: 12, background: "#FAF7F2", maxHeight: "85vh" }} onClick={(e) => e.stopPropagation()}>
@@ -456,21 +485,17 @@ function BulkAddModal({ tasks, onClose, onAdd }) {
           <div style={{ fontSize: 18, color: "#2B2B2B" }}>Paste a list</div>
           <button onClick={onClose} style={{ background: "none", color: "#9C8F76", fontSize: 18 }}>✕</button>
         </div>
-
         <div style={{ display: "flex", alignItems: "center", borderRadius: 999, padding: 2, background: "#EFE9DC", border: "1px solid #E0D7C4", alignSelf: "center" }}>
           <button onClick={() => setScheduledFor("today")} style={{ padding: "4px 16px", borderRadius: 999, background: scheduledFor === "today" ? "#2B2B2B" : "transparent", color: scheduledFor === "today" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>today</button>
           <button onClick={() => setScheduledFor("tomorrow")} style={{ padding: "4px 16px", borderRadius: 999, background: scheduledFor === "tomorrow" ? "#7A8B69" : "transparent", color: scheduledFor === "tomorrow" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>tomorrow</button>
         </div>
-
         <div style={{ fontSize: 12.5, color: "#9C8F76", lineHeight: 1.5 }}>
           One task per line:<br />
           <span style={{ fontFamily: "ui-monospace, monospace" }}>Call doctor, 10:00 AM</span><br />
           <span style={{ fontFamily: "ui-monospace, monospace" }}>File paperwork, after: Call doctor</span>
         </div>
-
         <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={"Call doctor, 10:00 AM\nFile paperwork, after: Call doctor"} rows={5}
           style={{ width: "100%", padding: "8px 12px", borderRadius: 12, background: "#EFE9DC", fontSize: 14, color: "#2B2B2B", fontFamily: "ui-monospace, monospace", resize: "vertical" }} />
-
         {preview.length > 0 && (
           <div style={{ overflowY: "auto", maxHeight: 140 }}>
             <div style={{ fontSize: 11, color: "#9C8F76", fontFamily: "ui-monospace, monospace", marginBottom: 4 }}>{preview.length} task{preview.length !== 1 ? "s" : ""} → {scheduledFor}</div>
@@ -483,7 +508,6 @@ function BulkAddModal({ tasks, onClose, onAdd }) {
             ))}
           </div>
         )}
-
         <button onClick={() => preview.length && onAdd(preview)} disabled={preview.length === 0}
           style={{ width: "100%", padding: "12px 0", borderRadius: 12, background: preview.length ? (scheduledFor === "tomorrow" ? "#7A8B69" : "#2B2B2B") : "#DCD5C6", color: "#FAF7F2", fontSize: 16 }}>
           Add {preview.length || ""} task{preview.length === 1 ? "" : "s"} for {scheduledFor}
