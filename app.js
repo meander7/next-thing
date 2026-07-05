@@ -212,7 +212,7 @@ function NextThing() {
 
 function Header({ view, setView, now, onReset, tomorrowCount, onTomorrowOpen }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px 20px 16px", borderBottom: "1px solid #E8E1D4" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px 16px", borderBottom: "1px solid #E8E1D4" }}>
       <div>
         <div style={{ fontSize: 11, letterSpacing: "0.12em", color: "#9C8F76", fontFamily: "ui-monospace, monospace" }}>
           {now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
@@ -227,8 +227,8 @@ function Header({ view, setView, now, onReset, tomorrowCount, onTomorrowOpen }) 
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "center", borderRadius: 999, padding: 2, background: "#EFE9DC", border: "1px solid #E0D7C4" }}>
-          <button onClick={() => setView("focus")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, background: view === "focus" ? "#2B2B2B" : "transparent", color: view === "focus" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>⚡ Now</button>
-          <button onClick={() => setView("timeline")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, background: view === "timeline" ? "#2B2B2B" : "transparent", color: view === "timeline" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>☰ Day</button>
+          <button onClick={() => setView("focus")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 999, background: view === "focus" ? "#2B2B2B" : "transparent", color: view === "focus" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>⚡ Now</button>
+          <button onClick={() => setView("timeline")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 999, background: view === "timeline" ? "#2B2B2B" : "transparent", color: view === "timeline" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>☰ Day</button>
         </div>
         <button onClick={onReset} title="Reset to default schedule" style={{ width: 32, height: 32, borderRadius: 999, background: "#EFE9DC", color: "#9C8F76", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #E0D7C4" }}>↺</button>
       </div>
@@ -262,7 +262,7 @@ function TomorrowDrawer({ tasks, onClose, onDelete, onAdd }) {
         ) : (
           <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
             {tasks.map((t) => (
-              <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #F0EAE0" }}>
+              <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid #F0EAE0" }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 16, color: "#2B2B2B" }}>{t.title}</div>
                   <div style={{ fontSize: 12, color: "#ADA28A", fontFamily: "ui-monospace, monospace", marginTop: 2 }}>
@@ -287,7 +287,7 @@ function TomorrowDrawer({ tasks, onClose, onDelete, onAdd }) {
 function ResetConfirmModal({ onConfirm, onClose }) {
   return (
     <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, background: "rgba(43,43,43,0.5)", padding: 24 }} onClick={onClose}>
-      <div style={{ width: "100%", maxWidth: 360, borderRadius: 20, padding: 28, background: "#FAF7F2", display: "flex", flexDirection: "column", gap: 16, textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
+      <div style={{ width: "100%", maxWidth: 360, borderRadius: 20, padding: 24, background: "#FAF7F2", display: "flex", flexDirection: "column", gap: 16, textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontSize: 22, color: "#2B2B2B" }}>Reset schedule?</div>
         <div style={{ fontSize: 15, color: "#9C8F76", lineHeight: 1.5 }}>This will remove any tasks you've added and restore the default daily schedule. Completed tasks will also reset.</div>
         <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
@@ -302,7 +302,7 @@ function ResetConfirmModal({ onConfirm, onClose }) {
 function FocusView({ nextThing, allDone, onComplete, now }) {
   if (allDone) {
     return (
-      <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", textAlign: "center", gap: 12 }}>
+      <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 32px", textAlign: "center", gap: 12 }}>
         <div style={{ fontSize: 15, fontFamily: "ui-monospace, monospace", color: "#9C8F76", letterSpacing: "0.08em" }}>ALL CLEAR</div>
         <div style={{ fontSize: 28, color: "#2B2B2B", lineHeight: 1.3 }}>Nothing left for now.</div>
         <div style={{ fontSize: 15, color: "#9C8F76" }}>Rest. The next thing will wait for you.</div>
@@ -311,7 +311,7 @@ function FocusView({ nextThing, allDone, onComplete, now }) {
   }
   if (!nextThing) {
     return (
-      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 32px", textAlign: "center" }}>
+      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 32px", textAlign: "center" }}>
         <div style={{ fontSize: 18, color: "#9C8F76" }}>Everything left is locked. Check the Day view to see what unlocks it.</div>
       </div>
     );
@@ -319,7 +319,7 @@ function FocusView({ nextThing, allDone, onComplete, now }) {
   const isFixed = nextThing.kind === "fixed";
   const isFuture = isFixed && nextThing.time > now;
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 24px 0 24px", gap: 32 }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", gap: 32 }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, maxWidth: 380, width: "100%" }}>
         <div style={{ fontSize: 12, letterSpacing: "0.14em", color: isFuture ? "#9C8F76" : "#7A8B69", fontFamily: "ui-monospace, monospace" }}>
           {isFuture ? `SCHEDULED · ${minutesToLabel(nextThing.time)}` : isFixed ? "DUE NOW" : "UNLOCKED"}
@@ -327,7 +327,7 @@ function FocusView({ nextThing, allDone, onComplete, now }) {
         <div style={{ textAlign: "center", fontSize: 36, lineHeight: 1.25, color: "#2B2B2B", fontWeight: 500 }}>{nextThing.title}</div>
         {nextThing.kind === "triggered" && <div style={{ fontSize: 14, color: "#9C8F76" }}>unlocked by completing the task before it</div>}
       </div>
-      <button onClick={() => onComplete(nextThing.id)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 28px", borderRadius: 999, background: "#2B2B2B", color: "#FAF7F2", fontSize: 16 }}>✓ Done</button>
+      <button onClick={() => onComplete(nextThing.id)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "16px 28px", borderRadius: 999, background: "#2B2B2B", color: "#FAF7F2", fontSize: 16 }}>✓ Done</button>
     </div>
   );
 }
@@ -335,13 +335,13 @@ function FocusView({ nextThing, allDone, onComplete, now }) {
 function TimelineView({ order, isUnlocked, toggleDone, deleteTask, nextId }) {
   if (order.length === 0) {
     return (
-      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 32px", textAlign: "center" }}>
+      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 32px", textAlign: "center" }}>
         <div style={{ fontSize: 16, color: "#9C8F76" }}>No tasks yet. Add one to start the day.</div>
       </div>
     );
   }
   return (
-    <div style={{ height: "100%", overflowY: "auto", padding: "20px 20px" }}>
+    <div style={{ height: "100%", overflowY: "auto", padding: "20px" }}>
       <div style={{ display: "flex", flexDirection: "column" }}>
         {order.map((task, i) => {
           const unlocked = isUnlocked(task);
@@ -412,13 +412,13 @@ function AddTaskModal({ tasks, onClose, onAdd }) {
 
         {/* Today / Tomorrow toggle */}
         <div style={{ display: "flex", alignItems: "center", borderRadius: 999, padding: 2, background: "#EFE9DC", border: "1px solid #E0D7C4", alignSelf: "center" }}>
-          <button onClick={() => setScheduledFor("today")} style={{ padding: "6px 18px", borderRadius: 999, background: scheduledFor === "today" ? "#2B2B2B" : "transparent", color: scheduledFor === "today" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>today</button>
-          <button onClick={() => setScheduledFor("tomorrow")} style={{ padding: "6px 18px", borderRadius: 999, background: scheduledFor === "tomorrow" ? "#7A8B69" : "transparent", color: scheduledFor === "tomorrow" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>tomorrow</button>
+          <button onClick={() => setScheduledFor("today")} style={{ padding: "4px 16px", borderRadius: 999, background: scheduledFor === "today" ? "#2B2B2B" : "transparent", color: scheduledFor === "today" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>today</button>
+          <button onClick={() => setScheduledFor("tomorrow")} style={{ padding: "4px 16px", borderRadius: 999, background: scheduledFor === "tomorrow" ? "#7A8B69" : "transparent", color: scheduledFor === "tomorrow" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>tomorrow</button>
         </div>
 
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => setKind("fixed")} style={{ flex: 1, padding: "10px 0", borderRadius: 12, background: kind === "fixed" ? "#2B2B2B" : "#EFE9DC", color: kind === "fixed" ? "#FAF7F2" : "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>fixed time</button>
-          <button onClick={() => setKind("triggered")} disabled={tasks.length === 0} style={{ flex: 1, padding: "10px 0", borderRadius: 12, background: kind === "triggered" ? "#2B2B2B" : "#EFE9DC", color: kind === "triggered" ? "#FAF7F2" : "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace", opacity: tasks.length === 0 ? 0.5 : 1 }}>after another task</button>
+          <button onClick={() => setKind("fixed")} style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: kind === "fixed" ? "#2B2B2B" : "#EFE9DC", color: kind === "fixed" ? "#FAF7F2" : "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>fixed time</button>
+          <button onClick={() => setKind("triggered")} disabled={tasks.length === 0} style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: kind === "triggered" ? "#2B2B2B" : "#EFE9DC", color: kind === "triggered" ? "#FAF7F2" : "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace", opacity: tasks.length === 0 ? 0.5 : 1 }}>after another task</button>
         </div>
 
         {kind === "fixed" ? (
@@ -431,7 +431,7 @@ function AddTaskModal({ tasks, onClose, onAdd }) {
             </select>
           </div>
         ) : (
-          <select value={triggerId} onChange={(e) => setTriggerId(e.target.value)} style={{ padding: "10px 12px", borderRadius: 8, width: "100%", background: "#EFE9DC", fontSize: 15 }}>
+          <select value={triggerId} onChange={(e) => setTriggerId(e.target.value)} style={{ padding: "8px 12px", borderRadius: 8, width: "100%", background: "#EFE9DC", fontSize: 15 }}>
             {tasks.map((t) => (<option key={t.id} value={t.id}>after: {t.title}</option>))}
           </select>
         )}
@@ -458,8 +458,8 @@ function BulkAddModal({ tasks, onClose, onAdd }) {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", borderRadius: 999, padding: 2, background: "#EFE9DC", border: "1px solid #E0D7C4", alignSelf: "center" }}>
-          <button onClick={() => setScheduledFor("today")} style={{ padding: "6px 18px", borderRadius: 999, background: scheduledFor === "today" ? "#2B2B2B" : "transparent", color: scheduledFor === "today" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>today</button>
-          <button onClick={() => setScheduledFor("tomorrow")} style={{ padding: "6px 18px", borderRadius: 999, background: scheduledFor === "tomorrow" ? "#7A8B69" : "transparent", color: scheduledFor === "tomorrow" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>tomorrow</button>
+          <button onClick={() => setScheduledFor("today")} style={{ padding: "4px 16px", borderRadius: 999, background: scheduledFor === "today" ? "#2B2B2B" : "transparent", color: scheduledFor === "today" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>today</button>
+          <button onClick={() => setScheduledFor("tomorrow")} style={{ padding: "4px 16px", borderRadius: 999, background: scheduledFor === "tomorrow" ? "#7A8B69" : "transparent", color: scheduledFor === "tomorrow" ? "#FAF7F2" : "#8A8270", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>tomorrow</button>
         </div>
 
         <div style={{ fontSize: 12.5, color: "#9C8F76", lineHeight: 1.5 }}>
@@ -469,7 +469,7 @@ function BulkAddModal({ tasks, onClose, onAdd }) {
         </div>
 
         <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={"Call doctor, 10:00 AM\nFile paperwork, after: Call doctor"} rows={5}
-          style={{ width: "100%", padding: "10px 12px", borderRadius: 12, background: "#EFE9DC", fontSize: 14, color: "#2B2B2B", fontFamily: "ui-monospace, monospace", resize: "vertical" }} />
+          style={{ width: "100%", padding: "8px 12px", borderRadius: 12, background: "#EFE9DC", fontSize: 14, color: "#2B2B2B", fontFamily: "ui-monospace, monospace", resize: "vertical" }} />
 
         {preview.length > 0 && (
           <div style={{ overflowY: "auto", maxHeight: 140 }}>
