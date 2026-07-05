@@ -192,7 +192,7 @@ function NextThing() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column", background: "#FAF7F2", fontFamily: "'Iowan Old Style', 'Palatino Linotype', Georgia, serif" }}
+    <div style={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column", background: "chartreuse", fontFamily: "'Iowan Old Style', 'Palatino Linotype', Georgia, serif" }}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <Header view={view} setView={setView} now={now} onReset={() => setShowResetConfirm(true)} tomorrowCount={tomorrowTasks.length} onTomorrowOpen={() => setShowTomorrow(true)} />
       <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
@@ -373,7 +373,7 @@ function TimelineView({ order, isUnlocked, toggleDone, deleteTask, nextId }) {
 
 function BottomBar({ onAdd, onBulkAdd }) {
   return (
-    <div style={{ position: "sticky", bottom: 0, padding: "12px 20px", display: "flex", justifyContent: "center", gap: 8, borderTop: "1px solid #E8E1D4", background: "#FAF7F2", zIndex: 10 }}>
+    <div style={{ padding: "12px 20px", display: "flex", justifyContent: "center", gap: 8, borderTop: "1px solid #E8E1D4" }}>
       <button onClick={onAdd} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 999, background: "#EFE9DC", color: "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>+ add task</button>
       <button onClick={onBulkAdd} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 999, background: "#EFE9DC", color: "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>📋 paste list</button>
     </div>
