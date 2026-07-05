@@ -373,7 +373,7 @@ function TimelineView({ order, isUnlocked, toggleDone, deleteTask, nextId }) {
 
 function BottomBar({ onAdd, onBulkAdd }) {
   return (
-    <div style={{ padding: "12px 20px", display: "flex", justifyContent: "center", gap: 8, borderTop: "1px solid #E8E1D4" }}>
+    <div style={{ position: "sticky", bottom: 0, padding: "12px 20px", display: "flex", justifyContent: "center", gap: 8, borderTop: "1px solid #E8E1D4", background: "#FAF7F2", zIndex: 10 }}>
       <button onClick={onAdd} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 999, background: "#EFE9DC", color: "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>+ add task</button>
       <button onClick={onBulkAdd} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 999, background: "#EFE9DC", color: "#5C5440", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>📋 paste list</button>
     </div>
